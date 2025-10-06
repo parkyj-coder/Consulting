@@ -301,22 +301,58 @@
         </div>
     </div>
     
+    <!-- 상담 데이터를 JSON으로 저장 -->
+    <script type="application/json" id="consultationsData">
+    [
+        <% for (int i = 0; i < consultations.size(); i++) { 
+            ConsultationRequest consultation = consultations.get(i);
+        %>
+        {
+            "id": <%= consultation.getId() %>,
+            "companyName": "<%= consultation.getCompanyName() != null ? consultation.getCompanyName().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "businessNumber": "<%= consultation.getBusinessNumber() != null ? consultation.getBusinessNumber().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "applicantName": "<%= consultation.getApplicantName() != null ? consultation.getApplicantName().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "relationship": "<%= consultation.getRelationship() != null ? consultation.getRelationship().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "relationshipOther": "<%= consultation.getRelationshipOther() != null ? consultation.getRelationshipOther().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "phone": "<%= consultation.getPhone() != null ? consultation.getPhone().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "address": "<%= consultation.getAddress() != null ? consultation.getAddress().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "detailAddress": "<%= consultation.getDetailAddress() != null ? consultation.getDetailAddress().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "ownership": "<%= consultation.getOwnership() != null ? consultation.getOwnership().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "industry": "<%= consultation.getIndustry() != null ? consultation.getIndustry().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "sales": "<%= consultation.getSales() != null ? consultation.getSales().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "loanAmount": "<%= consultation.getLoanAmount() != null ? consultation.getLoanAmount().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "fundType": "<%= consultation.getFundType() != null ? consultation.getFundType().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "message": "<%= consultation.getMessage() != null ? consultation.getMessage().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "status": "<%= consultation.getStatus() != null ? consultation.getStatus().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "createdAt": "<%= consultation.getCreatedAt() != null ? consultation.getCreatedAt().toString() : "" %>"
+        }<%= i < consultations.size() - 1 ? "," : "" %>
+        <% } %>
+    ]
+    </script>
+    
     <script>
         function showDetail(id) {
-            fetch('/consultation?id=' + id)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        displayDetail(data.data);
-                        document.getElementById('detailModal').style.display = 'block';
-                    } else {
-                        alert('상세 정보를 불러올 수 없습니다.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('오류가 발생했습니다.');
-                });
+            try {
+                // JSON 데이터에서 상담 정보 찾기
+                const dataElement = document.getElementById('consultationsData');
+                const consultations = JSON.parse(dataElement.textContent);
+                
+                console.log('All consultations:', consultations);
+                console.log('Looking for ID:', id);
+                
+                const consultation = consultations.find(c => c.id === id);
+                console.log('Found consultation:', consultation);
+                
+                if (consultation) {
+                    displayDetail(consultation);
+                    document.getElementById('detailModal').style.display = 'block';
+                } else {
+                    alert('상세 정보를 찾을 수 없습니다. ID: ' + id);
+                }
+            } catch (error) {
+                console.error('Error parsing consultation data:', error);
+                alert('데이터를 불러오는 중 오류가 발생했습니다.');
+            }
         }
         
         function displayDetail(consultation) {
@@ -405,16 +441,17 @@
         
         function updateStatus(id, status) {
             if (confirm('상태를 변경하시겠습니까?')) {
-                fetch('/consultation', {
-                    method: 'PUT',
+                // 상태 변경 요청
+                fetch('updateStatus.jsp', {
+                    method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: JSON.stringify({id: id, status: status})
+                    body: 'id=' + id + '&status=' + encodeURIComponent(status)
                 })
-                .then(response => response.json())
+                .then(response => response.text())
                 .then(data => {
-                    if (data.success) {
+                    if (data.includes('success')) {
                         alert('상태가 변경되었습니다.');
                         location.reload();
                     } else {
@@ -430,16 +467,17 @@
         
         function deleteConsultation(id) {
             if (confirm('정말로 삭제하시겠습니까?')) {
-                fetch('/consultation', {
-                    method: 'DELETE',
+                // 삭제 요청
+                fetch('deleteConsultation.jsp', {
+                    method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: JSON.stringify({id: id})
+                    body: 'id=' + id
                 })
-                .then(response => response.json())
+                .then(response => response.text())
                 .then(data => {
-                    if (data.success) {
+                    if (data.includes('success')) {
                         alert('삭제되었습니다.');
                         location.reload();
                     } else {
