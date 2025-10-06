@@ -14,9 +14,9 @@ public class ConsultationDAO {
         System.out.println("=== ConsultationDAO.saveConsultation 시작 ===");
         String sql = "INSERT INTO consultation_requests " +
                     "(company_name, business_number, applicant_name, relationship, relationship_other, " +
-                    "phone, address, detail_address, ownership, industry, sales, loan_amount, " +
-                    "fund_type, message, privacy_agreement, status, created_at) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+                    "phone, address, detail_address, ownership, industry, sales, sales_unit, loan_amount, loan_unit, " +
+                    "fund_type, message, privacy_agreement, status) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         System.out.println("SQL: " + sql);
         
@@ -36,11 +36,13 @@ public class ConsultationDAO {
             pstmt.setString(9, request.getOwnership());
             pstmt.setString(10, request.getIndustry());
             pstmt.setString(11, request.getSales());
-            pstmt.setString(12, request.getLoanAmount());
-            pstmt.setString(13, request.getFundType());
-            pstmt.setString(14, request.getMessage());
-            pstmt.setBoolean(15, request.isPrivacyAgreement());
-            pstmt.setString(16, request.getStatus());
+            pstmt.setString(12, request.getSalesUnit());
+            pstmt.setString(13, request.getLoanAmount());
+            pstmt.setString(14, request.getLoanUnit());
+            pstmt.setString(15, request.getFundType());
+            pstmt.setString(16, request.getMessage());
+            pstmt.setBoolean(17, request.isPrivacyAgreement());
+            pstmt.setString(18, request.getStatus());
             
             int result = pstmt.executeUpdate();
             System.out.println("INSERT 실행 결과: " + result + "행 영향받음");
@@ -76,7 +78,9 @@ public class ConsultationDAO {
                 request.setOwnership(rs.getString("ownership"));
                 request.setIndustry(rs.getString("industry"));
                 request.setSales(rs.getString("sales"));
+                request.setSalesUnit(rs.getString("sales_unit"));
                 request.setLoanAmount(rs.getString("loan_amount"));
+                request.setLoanUnit(rs.getString("loan_unit"));
                 request.setFundType(rs.getString("fund_type"));
                 request.setMessage(rs.getString("message"));
                 request.setPrivacyAgreement(rs.getBoolean("privacy_agreement"));
@@ -117,7 +121,9 @@ public class ConsultationDAO {
                 request.setOwnership(rs.getString("ownership"));
                 request.setIndustry(rs.getString("industry"));
                 request.setSales(rs.getString("sales"));
+                request.setSalesUnit(rs.getString("sales_unit"));
                 request.setLoanAmount(rs.getString("loan_amount"));
+                request.setLoanUnit(rs.getString("loan_unit"));
                 request.setFundType(rs.getString("fund_type"));
                 request.setMessage(rs.getString("message"));
                 request.setPrivacyAgreement(rs.getBoolean("privacy_agreement"));

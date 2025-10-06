@@ -37,6 +37,7 @@ public class AdminDAO {
                         rs.getString("name"),
                         rs.getString("email"),
                         rs.getString("phone"),
+                        rs.getString("admin_level"),
                         rs.getTimestamp("created_at"),
                         rs.getTimestamp("updated_at"),
                         rs.getBoolean("is_active")
@@ -70,6 +71,7 @@ public class AdminDAO {
                     rs.getString("name"),
                     rs.getString("email"),
                     rs.getString("phone"),
+                    rs.getString("admin_level"),
                     rs.getTimestamp("created_at"),
                     rs.getTimestamp("updated_at"),
                     rs.getBoolean("is_active")
@@ -105,6 +107,7 @@ public class AdminDAO {
                     rs.getString("name"),
                     rs.getString("email"),
                     rs.getString("phone"),
+                    rs.getString("admin_level"),
                     rs.getTimestamp("created_at"),
                     rs.getTimestamp("updated_at"),
                     rs.getBoolean("is_active")
@@ -163,6 +166,51 @@ public class AdminDAO {
     }
     
     /**
+     * 관리자 정보 종합 업데이트 (이름, 이메일, 상태, 권한, 비밀번호)
+     * @param adminId 관리자 ID
+     * @param name 이름
+     * @param email 이메일
+     * @param isActive 활성화 여부
+     * @param adminLevel 권한 레벨
+     * @param newPassword 새 비밀번호 (null이면 변경하지 않음)
+     * @return 수정 성공 여부
+     */
+    public boolean updateAdminInfo(String adminId, String name, String email, boolean isActive, String adminLevel, String newPassword) {
+        StringBuilder sql = new StringBuilder("UPDATE admins SET name = ?, email = ?, is_active = ?, admin_level = ?, updated_at = CURRENT_TIMESTAMP");
+        
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            sql.append(", password = ?");
+        }
+        
+        sql.append(" WHERE admin_id = ?");
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+            
+            pstmt.setString(1, name);
+            pstmt.setString(2, email);
+            pstmt.setBoolean(3, isActive);
+            pstmt.setString(4, adminLevel);
+            
+            int paramIndex = 5;
+            if (newPassword != null && !newPassword.trim().isEmpty()) {
+                pstmt.setString(paramIndex++, PasswordUtil.hashPassword(newPassword));
+            }
+            
+            pstmt.setString(paramIndex, adminId);
+            
+            int rowsAffected = pstmt.executeUpdate();
+            System.out.println("AdminDAO.updateAdminInfo - Rows affected: " + rowsAffected);
+            
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.out.println("AdminDAO.updateAdminInfo - SQL Exception: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
      * 관리자 비밀번호 변경
      * @param adminId 관리자 ID
      * @param newPassword 새 비밀번호
@@ -174,11 +222,18 @@ public class AdminDAO {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            pstmt.setString(1, PasswordUtil.hashPassword(newPassword));
+            String hashedPassword = PasswordUtil.hashPassword(newPassword);
+            System.out.println("AdminDAO.changePassword - AdminId: " + adminId + ", HashedPassword: " + hashedPassword.substring(0, Math.min(10, hashedPassword.length())) + "...");
+            
+            pstmt.setString(1, hashedPassword);
             pstmt.setString(2, adminId);
             
-            return pstmt.executeUpdate() > 0;
+            int rowsAffected = pstmt.executeUpdate();
+            System.out.println("AdminDAO.changePassword - Rows affected: " + rowsAffected);
+            
+            return rowsAffected > 0;
         } catch (SQLException e) {
+            System.out.println("AdminDAO.changePassword - SQL Exception: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -273,5 +328,27 @@ public class AdminDAO {
         }
         
         return phones;
+    }
+    
+    /**
+     * 관리자 권한 변경
+     * @param adminId 관리자 ID
+     * @param adminLevel 새로운 권한 레벨 ('super' 또는 'normal')
+     * @return 변경 성공 여부
+     */
+    public boolean changeAdminLevel(String adminId, String adminLevel) {
+        String sql = "UPDATE admins SET admin_level = ?, updated_at = CURRENT_TIMESTAMP WHERE admin_id = ?";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, adminLevel);
+            pstmt.setString(2, adminId);
+            
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

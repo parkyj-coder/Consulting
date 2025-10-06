@@ -78,8 +78,50 @@ function preventLandscape() {
     }
 }
 
+// 카카오톡 인앱 브라우저 감지
+function detectKakaoInApp() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isKakao = userAgent.indexOf('kakaotalk') > -1;
+    
+    if (isKakao) {
+        document.body.classList.add('kakao-inapp');
+        console.log('카카오톡 인앱 브라우저 감지됨');
+        
+        // 카카오톡에서 추가 최적화
+        optimizeForKakao();
+    }
+    
+    return isKakao;
+}
+
+// 카카오톡 인앱 브라우저 최적화
+function optimizeForKakao() {
+    // 스크롤 성능 최적화
+    document.body.style.webkitOverflowScrolling = 'touch';
+    
+    // 터치 이벤트 최적화
+    document.addEventListener('touchstart', function() {}, { passive: true });
+    document.addEventListener('touchmove', function() {}, { passive: true });
+    
+    // 모달 스크롤 최적화
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.style.webkitOverflowScrolling = 'touch';
+    });
+    
+    // 폼 입력 최적화
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.style.webkitAppearance = 'none';
+        input.style.borderRadius = '0';
+    });
+}
+
 // DOM이 로드된 후 실행
 document.addEventListener('DOMContentLoaded', function() {
+    // 카카오톡 인앱 브라우저 감지
+    detectKakaoInApp();
+    
     // 모바일 메뉴 토글
     const hamburger = document.querySelector('.hamburger');
     const navMenu = document.querySelector('.nav-menu');
@@ -1132,4 +1174,268 @@ window.addEventListener('load', function() {
         const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
         console.log(`페이지 로드 시간: ${loadTime}ms`);
     }
+    
+    // 자동 포맷팅 기능 초기화
+    initAutoFormatting();
+    
+    // 주소 검색 기능 초기화
+    initAddressSearch();
 });
+
+// ===== 자동 포맷팅 기능 =====
+
+// 전화번호 자동 포맷팅
+function formatPhoneNumber(input) {
+    let value = input.value.replace(/\D/g, ''); // 숫자만 추출
+    
+    if (value.length <= 3) {
+        input.value = value;
+    } else if (value.length <= 7) {
+        input.value = value.slice(0, 3) + '-' + value.slice(3);
+    } else if (value.length <= 11) {
+        input.value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+    } else {
+        // 11자리 초과 시 11자리까지만
+        input.value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+    }
+}
+
+// 사업자번호 자동 포맷팅
+function formatBusinessNumber(input) {
+    let value = input.value.replace(/\D/g, ''); // 숫자만 추출
+    
+    if (value.length <= 3) {
+        input.value = value;
+    } else if (value.length <= 5) {
+        input.value = value.slice(0, 3) + '-' + value.slice(3);
+    } else if (value.length <= 10) {
+        input.value = value.slice(0, 3) + '-' + value.slice(3, 5) + '-' + value.slice(5);
+    } else {
+        // 10자리 초과 시 10자리까지만
+        input.value = value.slice(0, 3) + '-' + value.slice(3, 5) + '-' + value.slice(5, 10);
+    }
+}
+
+// 금액 자동 포맷팅 (천 단위 구분자)
+function formatAmount(input) {
+    let value = input.value.replace(/[^\d]/g, ''); // 숫자만 추출
+    
+    if (value === '') {
+        input.value = '';
+        updateAmountPreview(input);
+        return;
+    }
+    
+    // 천 단위 구분자 추가
+    const formattedValue = parseInt(value).toLocaleString('ko-KR');
+    input.value = formattedValue;
+    
+    updateAmountPreview(input);
+}
+
+// 금액 미리보기 업데이트
+function updateAmountPreview(input) {
+    const amount = input.value.replace(/[^\d]/g, '');
+    const unitSelect = input.parentElement.querySelector('.amount-unit');
+    const previewElement = input.parentElement.querySelector('.amount-preview');
+    
+    if (!unitSelect || !previewElement) return;
+    
+    const unit = unitSelect.value;
+    const amountNum = parseInt(amount) || 0;
+    
+    if (amountNum === 0) {
+        previewElement.textContent = '';
+        return;
+    }
+    
+    let displayAmount = '';
+    switch (unit) {
+        case '원':
+            displayAmount = amountNum.toLocaleString('ko-KR') + '원';
+            break;
+        case '만원':
+            displayAmount = (amountNum * 10000).toLocaleString('ko-KR') + '원';
+            break;
+        case '천만원':
+            displayAmount = (amountNum * 10000000).toLocaleString('ko-KR') + '원';
+            break;
+        case '억원':
+            displayAmount = (amountNum * 100000000).toLocaleString('ko-KR') + '원';
+            break;
+    }
+    
+    previewElement.textContent = `= ${displayAmount}`;
+}
+
+// 자동 포맷팅 초기화
+function initAutoFormatting() {
+    // 전화번호 필드들에 이벤트 리스너 추가
+    const phoneInputs = document.querySelectorAll('input[type="tel"], input[name="phone"], input[id*="phone"], input[id*="Phone"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            formatPhoneNumber(this);
+        });
+        
+        // 포커스 아웃 시에도 포맷팅 적용
+        input.addEventListener('blur', function() {
+            formatPhoneNumber(this);
+        });
+        
+        // 키 입력 시 실시간 포맷팅
+        input.addEventListener('keyup', function() {
+            formatPhoneNumber(this);
+        });
+    });
+    
+    // 사업자번호 필드들에 이벤트 리스너 추가
+    const businessNumberInputs = document.querySelectorAll('input[name="businessNumber"], input[id*="businessNumber"], input[id*="BusinessNumber"]');
+    businessNumberInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            formatBusinessNumber(this);
+        });
+        
+        // 포커스 아웃 시에도 포맷팅 적용
+        input.addEventListener('blur', function() {
+            formatBusinessNumber(this);
+        });
+        
+        // 키 입력 시 실시간 포맷팅
+        input.addEventListener('keyup', function() {
+            formatBusinessNumber(this);
+        });
+    });
+    
+    // 금액 입력 필드들에 이벤트 리스너 추가
+    const amountInputs = document.querySelectorAll('.amount-input');
+    amountInputs.forEach(input => {
+        // 미리보기 요소 추가
+        const previewElement = document.createElement('span');
+        previewElement.className = 'amount-preview';
+        input.parentElement.appendChild(previewElement);
+        
+        input.addEventListener('input', function() {
+            formatAmount(this);
+        });
+        
+        input.addEventListener('blur', function() {
+            formatAmount(this);
+        });
+        
+        input.addEventListener('keyup', function() {
+            formatAmount(this);
+        });
+    });
+    
+    // 단위 선택 변경 시 미리보기 업데이트
+    const unitSelects = document.querySelectorAll('.amount-unit');
+    unitSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            const input = this.parentElement.querySelector('.amount-input');
+            if (input) {
+                updateAmountPreview(input);
+            }
+        });
+    });
+    
+    console.log('자동 포맷팅 기능이 초기화되었습니다.');
+    console.log('전화번호 필드:', phoneInputs.length, '개');
+    console.log('사업자번호 필드:', businessNumberInputs.length, '개');
+    console.log('금액 입력 필드:', amountInputs.length, '개');
+}
+
+// ===== 주소 검색 기능 =====
+
+// 주소 검색 함수
+function searchAddress(addressInputId, detailInputId) {
+    new daum.Postcode({
+        oncomplete: function(data) {
+            // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드
+            let addr = ''; // 주소 변수
+            let extraAddr = ''; // 참고항목 변수
+
+            // 사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+            if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+                addr = data.roadAddress;
+            } else { // 사용자가 지번 주소를 선택했을 경우(J)
+                addr = data.jibunAddress;
+            }
+
+            // 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
+            if(data.userSelectedType === 'R'){
+                // 법정동명이 있을 경우 추가한다. (법정리는 제외)
+                // 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
+                if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
+                    extraAddr += data.bname;
+                }
+                // 건물명이 있고, 공동주택일 경우 추가한다.
+                if(data.buildingName !== '' && data.apartment === 'Y'){
+                    extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                }
+                // 표시할 참고항목이 있을 경우, 괄호까지 추가한 최종 문자열을 만든다.
+                if(extraAddr !== ''){
+                    extraAddr = ' (' + extraAddr + ')';
+                }
+            }
+
+            // 우편번호와 주소 정보를 해당 필드에 넣는다.
+            document.getElementById(addressInputId).value = addr + extraAddr;
+            
+            // 상세주소 필드에 포커스를 이동한다.
+            document.getElementById(detailInputId).focus();
+            
+            // 주소 입력 완료 알림
+            showNotification('주소가 입력되었습니다. 상세주소를 입력해주세요.', 'success');
+        },
+        // 팝업 크기 및 위치 설정
+        width: '100%',
+        height: '100%',
+        maxSuggestItems: 5,
+        showMoreHName: true,
+        hideMapBtn: true,
+        hideEngBtn: true,
+        alwaysShowEngAddr: false,
+        submitMode: false,
+        useBanner: false,
+        theme: {
+            bgColor: '#ffffff',
+            searchBgColor: '#f5f5f5',
+            contentBgColor: '#ffffff',
+            pageBgColor: '#ffffff',
+            textColor: '#333333',
+            queryTextColor: '#222222',
+            postcodeTextColor: '#fa4256',
+            emphTextColor: '#008bd3',
+            outlineColor: '#e0e0e0'
+        }
+    }).open({
+        // 팝업 위치 설정
+        q: '', // 검색어 미리 입력
+        left: (screen.width / 2) - (500 / 2),
+        top: (screen.height / 2) - (600 / 2)
+    });
+}
+
+// 주소 검색 버튼 초기화
+function initAddressSearch() {
+    // 주소 검색 버튼들에 이벤트 리스너 추가
+    const addressSearchBtns = document.querySelectorAll('.address-search-btn');
+    addressSearchBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // 버튼의 onclick 속성에서 주소 입력 필드 ID 추출
+            const onclickAttr = this.getAttribute('onclick');
+            const matches = onclickAttr.match(/searchAddress\('([^']+)',\s*'([^']+)'\)/);
+            
+            if (matches && matches.length >= 3) {
+                const addressInputId = matches[1];
+                const detailInputId = matches[2];
+                searchAddress(addressInputId, detailInputId);
+            }
+        });
+    });
+    
+    console.log('주소 검색 기능이 초기화되었습니다.');
+    console.log('주소 검색 버튼:', addressSearchBtns.length, '개');
+}

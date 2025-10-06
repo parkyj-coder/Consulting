@@ -15,7 +15,9 @@ public class ConsultationRequest {
     private String ownership;
     private String industry;
     private String sales;
+    private String salesUnit;
     private String loanAmount;
+    private String loanUnit;
     private String fundType;
     private String message;
     private boolean privacyAgreement;
@@ -29,7 +31,7 @@ public class ConsultationRequest {
     public ConsultationRequest(String companyName, String businessNumber, String applicantName,
                              String relationship, String relationshipOther, String phone,
                              String address, String detailAddress, String ownership,
-                             String industry, String sales, String loanAmount,
+                             String industry, String sales, String salesUnit, String loanAmount, String loanUnit,
                              String fundType, String message, boolean privacyAgreement) {
         this.companyName = companyName;
         this.businessNumber = businessNumber;
@@ -42,7 +44,9 @@ public class ConsultationRequest {
         this.ownership = ownership;
         this.industry = industry;
         this.sales = sales;
+        this.salesUnit = salesUnit;
         this.loanAmount = loanAmount;
+        this.loanUnit = loanUnit;
         this.fundType = fundType;
         this.message = message;
         this.privacyAgreement = privacyAgreement;
@@ -86,8 +90,14 @@ public class ConsultationRequest {
     public String getSales() { return sales; }
     public void setSales(String sales) { this.sales = sales; }
     
+    public String getSalesUnit() { return salesUnit; }
+    public void setSalesUnit(String salesUnit) { this.salesUnit = salesUnit; }
+    
     public String getLoanAmount() { return loanAmount; }
     public void setLoanAmount(String loanAmount) { this.loanAmount = loanAmount; }
+    
+    public String getLoanUnit() { return loanUnit; }
+    public void setLoanUnit(String loanUnit) { this.loanUnit = loanUnit; }
     
     public String getFundType() { return fundType; }
     public void setFundType(String fundType) { this.fundType = fundType; }

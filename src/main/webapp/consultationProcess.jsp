@@ -18,7 +18,9 @@
         String[] ownershipArray = request.getParameterValues("ownership");
         String industry = request.getParameter("industry");
         String sales = request.getParameter("sales");
+        String salesUnit = request.getParameter("salesUnit");
         String loanAmount = request.getParameter("loanAmount");
+        String loanUnit = request.getParameter("loanUnit");
         String[] fundTypeArray = request.getParameterValues("fundType");
         String message = request.getParameter("message");
         String privacyAgreement = request.getParameter("privacyAgreement");
@@ -36,7 +38,9 @@
         System.out.println("ownership: " + (ownershipArray != null ? String.join(",", ownershipArray) : "null"));
         System.out.println("industry: " + industry);
         System.out.println("sales: " + sales);
+        System.out.println("salesUnit: " + salesUnit);
         System.out.println("loanAmount: " + loanAmount);
+        System.out.println("loanUnit: " + loanUnit);
         System.out.println("fundType: " + (fundTypeArray != null ? String.join(",", fundTypeArray) : "null"));
         System.out.println("message: " + message);
         System.out.println("privacyAgreement: " + privacyAgreement);
@@ -76,7 +80,9 @@
             ownership,
             industry,
             sales != null ? sales.trim() : "",
+            salesUnit != null ? salesUnit.trim() : "원",
             loanAmount != null ? loanAmount.trim() : "",
+            loanUnit != null ? loanUnit.trim() : "원",
             fundType,
             message != null ? message.trim() : "",
             true

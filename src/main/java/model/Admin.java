@@ -9,6 +9,7 @@ public class Admin {
     private String name;
     private String email;
     private String phone;
+    private String adminLevel;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private boolean isActive;
@@ -17,7 +18,7 @@ public class Admin {
     public Admin() {}
     
     // 전체 생성자
-    public Admin(int id, String adminId, String password, String name, String email, String phone,
+    public Admin(int id, String adminId, String password, String name, String email, String phone, String adminLevel,
                  Timestamp createdAt, Timestamp updatedAt, boolean isActive) {
         this.id = id;
         this.adminId = adminId;
@@ -25,6 +26,7 @@ public class Admin {
         this.name = name;
         this.email = email;
         this.phone = phone;
+        this.adminLevel = adminLevel;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.isActive = isActive;
@@ -107,5 +109,13 @@ public class Admin {
     
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+    
+    public String getAdminLevel() {
+        return adminLevel;
+    }
+    
+    public void setAdminLevel(String adminLevel) {
+        this.adminLevel = adminLevel;
     }
 }

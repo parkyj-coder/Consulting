@@ -27,13 +27,21 @@
     try {
         AdminDAO adminDAO = new AdminDAO();
         
+        // 디버깅 정보 출력
+        System.out.println("Admin Delete - AdminId: " + adminId);
+        
         // 관리자 삭제
         if (adminDAO.deleteAdmin(adminId.trim())) {
+            System.out.println("Admin delete successful");
+            out.clear();
             out.print("success");
         } else {
+            System.out.println("Admin delete failed - no rows affected");
+            out.clear();
             out.print("error");
         }
     } catch (Exception e) {
+        System.out.println("Admin delete exception: " + e.getMessage());
         e.printStackTrace();
         out.print("error");
     }

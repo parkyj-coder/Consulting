@@ -10,6 +10,14 @@
     <meta name="theme-color" content="#3182ce">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
+    <!-- 카카오톡 인앱 브라우저 최적화 -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="x5-page-mode" content="app">
+    <meta name="x5-orientation" content="portrait">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="x5-page-mode" content="app">
     <title>프리미엄 컨설팅 - 전문적인 비즈니스 솔루션</title>
     
     <!-- Favicon 추가 -->
@@ -21,6 +29,9 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     
+    <!-- 다음 우편번호 API -->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    
     <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -30,7 +41,8 @@
         <nav class="navbar">
             <div class="nav-container">
                 <div class="nav-logo">
-                    <h2>더문D&C그룹</h2>
+                    <img src="images/logo.png" alt="한국미래 중소기업 경영컨설팅 로고" class="logo-image">
+                    <h2>한국미래 중소기업 경영컨설팅</h2>
                 </div>
                 <ul class="nav-menu">
                     <li class="nav-item">
@@ -193,13 +205,13 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3>더문D&C그룹 한국중소기업 경영컨설팅 연구소</h3>
+                    <h3>한국미래 중소기업 경영컨설팅</h3>
                     <p>전문적인 비즈니스 솔루션을 제공하는 최고의 컨설팅 회사입니다.</p>
                 </div>
 
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 더문D&C그룹 한국중소기업 경영컨설팅 연구소. All rights reserved.</p>
+                <p>&copy; 2024 한국미래 중소기업 경영컨설팅. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -218,7 +230,7 @@
                 </div>
                 <div class="form-group">
                     <label for="corporateBusinessNumber">사업자번호(창업준비중인 경우 000-00-00000로 기재) *</label>
-                    <input type="text" id="corporateBusinessNumber" name="businessNumber" placeholder="000-00-00000" required>
+                    <input type="text" id="corporateBusinessNumber" name="businessNumber" placeholder="숫자만 입력하세요 (예: 1234567890)" required>
                 </div>
                 <div class="form-group">
                     <label for="corporateContact">신청자 성명 *</label>
@@ -240,14 +252,20 @@
                 </div>
                 <div class="form-group">
                     <label for="corporatePhone">휴대폰 *</label>
-                    <input type="tel" id="corporatePhone" name="phone" placeholder="010-0000-0000" required>
+                    <input type="tel" id="corporatePhone" name="phone" placeholder="숫자만 입력하세요 (예: 01012345678)" required>
                 </div>
                 <div class="form-group">
                     <label>사업장 주소(상세주소까지 기재/사업장이 아직 없으시면 예상지역이나 자택주소지 입력) *</label>
                     <div class="address-group">
-                        <input type="text" name="address" placeholder="주소" required>
-                        <input type="text" name="detailAddress" placeholder="상세주소" required>
+                        <div class="address-search-group">
+                            <input type="text" id="corporateAddress" name="address" placeholder="주소" required readonly>
+                            <button type="button" class="address-search-btn" onclick="searchAddress('corporateAddress', 'corporateDetailAddress')">
+                                <i class="fas fa-search"></i> 주소검색
+                            </button>
+                        </div>
+                        <input type="text" id="corporateDetailAddress" name="detailAddress" placeholder="상세주소 (동/호수 등)" required>
                     </div>
+                    <span class="address-hint">주소검색 버튼을 클릭하여 정확한 주소를 입력하세요</span>
                 </div>
                 <div class="form-group">
                     <label>사업장 소유 *</label>
@@ -276,11 +294,29 @@
                 </div>
                 <div class="form-group">
                     <label for="corporateSales">전년도 매출액</label>
-                    <input type="text" id="corporateSales" name="sales" placeholder="예: 1억원">
+                    <div class="amount-input-group">
+                        <input type="text" id="corporateSales" name="sales" placeholder="숫자만 입력하세요 (예: 100000000)" class="amount-input">
+                        <select id="corporateSalesUnit" name="salesUnit" class="amount-unit">
+                            <option value="원">원</option>
+                            <option value="만원">만원</option>
+                            <option value="천만원">천만원</option>
+                            <option value="억원">억원</option>
+                        </select>
+                    </div>
+                    <span class="amount-hint">예: 1억원 → 1을 입력하고 "억원" 선택</span>
                 </div>
                 <div class="form-group">
                     <label for="corporateLoanAmount">대출 요청 금액</label>
-                    <input type="text" id="corporateLoanAmount" name="loanAmount" placeholder="예: 5천만원">
+                    <div class="amount-input-group">
+                        <input type="text" id="corporateLoanAmount" name="loanAmount" placeholder="숫자만 입력하세요 (예: 50000000)" class="amount-input">
+                        <select id="corporateLoanUnit" name="loanUnit" class="amount-unit">
+                            <option value="원">원</option>
+                            <option value="만원">만원</option>
+                            <option value="천만원">천만원</option>
+                            <option value="억원">억원</option>
+                        </select>
+                    </div>
+                    <span class="amount-hint">예: 5천만원 → 5를 입력하고 "천만원" 선택</span>
                 </div>
                 <div class="form-group">
                     <label>요청 자금 종류</label>
@@ -341,7 +377,7 @@
                 </div>
                 <div class="form-group">
                     <label for="personalPhone">연락처 *</label>
-                    <input type="tel" id="personalPhone" name="phone" required>
+                    <input type="tel" id="personalPhone" name="phone" placeholder="숫자만 입력하세요 (예: 01012345678)" required>
                 </div>
                 <div class="form-group">
                     <label for="personalEmail">이메일 *</label>
@@ -379,7 +415,7 @@
                 </div>
                 <div class="form-group">
                     <label for="careerPhone">연락처 *</label>
-                    <input type="tel" id="careerPhone" name="phone" required>
+                    <input type="tel" id="careerPhone" name="phone" placeholder="숫자만 입력하세요 (예: 01012345678)" required>
                 </div>
                 <div class="form-group">
                     <label for="careerEmail">이메일 *</label>

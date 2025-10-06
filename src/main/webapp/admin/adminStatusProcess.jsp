@@ -23,13 +23,21 @@
         boolean isActive = Boolean.parseBoolean(isActiveStr);
         AdminDAO adminDAO = new AdminDAO();
         
+        // 디버깅 정보 출력
+        System.out.println("Admin Status Change - AdminId: " + adminId + ", IsActive: " + isActive);
+        
         // 관리자 상태 변경
         if (adminDAO.setAdminStatus(adminId.trim(), isActive)) {
+            System.out.println("Admin status change successful");
+            out.clear();
             out.print("success");
         } else {
+            System.out.println("Admin status change failed - no rows affected");
+            out.clear();
             out.print("error");
         }
     } catch (Exception e) {
+        System.out.println("Admin status change exception: " + e.getMessage());
         e.printStackTrace();
         out.print("error");
     }

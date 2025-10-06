@@ -1,6 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="dao.ConsultationDAO" %>
+<%@ page import="dao.AdminDAO" %>
 <%@ page import="model.ConsultationRequest" %>
+<%@ page import="model.Admin" %>
 <%@ page import="java.util.List" %>
 <%
     // 관리자 인증 체크
@@ -8,6 +10,24 @@
     if (adminLoggedIn == null || !adminLoggedIn.equals("true")) {
         response.sendRedirect("login.jsp");
         return;
+    }
+    
+    // 현재 로그인한 관리자 정보 확인
+    String currentAdminId = (String) session.getAttribute("adminId");
+    boolean isSuperAdmin = false;
+    
+    if (currentAdminId != null) {
+        // 현재 로그인한 관리자의 권한 레벨 확인
+        AdminDAO adminDAO = new AdminDAO();
+        Admin currentAdmin = adminDAO.getAdminById(currentAdminId);
+        if (currentAdmin != null) {
+            // admin_level이 null이거나 없으면 기존 방식으로 확인
+            if (currentAdmin.getAdminLevel() == null) {
+                isSuperAdmin = "admin".equals(currentAdminId) || "superadmin".equals(currentAdminId);
+            } else {
+                isSuperAdmin = "super".equals(currentAdmin.getAdminLevel());
+            }
+        }
     }
     
     ConsultationDAO dao = new ConsultationDAO();
@@ -42,18 +62,84 @@
         
         .admin-navigation {
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         
         .nav-button {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             text-decoration: none;
             border-radius: 4px;
-            margin-right: 10px;
             transition: background-color 0.3s;
             border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.875rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        /* 햄버거 메뉴 스타일 */
+        .hamburger-menu {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .hamburger-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background-color 0.3s;
+        }
+        
+        .hamburger-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .hamburger-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 1000;
+            margin-top: 5px;
+        }
+        
+        .hamburger-content.show {
+            display: block;
+        }
+        
+        .hamburger-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.3s;
+        }
+        
+        .hamburger-content a:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .hamburger-content a:last-child {
+            border-bottom: none;
+        }
+        
+        .hamburger-content a i {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
         }
         
         .nav-button:hover {
@@ -165,15 +251,30 @@
         }
         
         .close {
-            color: #aaa;
+            color: #666;
             float: right;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f0f0f0;
+            transition: all 0.3s ease;
+            line-height: 1;
         }
         
         .close:hover {
-            color: black;
+            color: #333;
+            background: #e0e0e0;
+            transform: scale(1.1);
+        }
+        
+        .close:active {
+            transform: scale(0.95);
         }
         
         .detail-section {
@@ -204,7 +305,62 @@
             color: #2d3748;
         }
         
+        .detail-actions {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .action-buttons .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            min-width: 100px;
+        }
+        
         @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .action-buttons .btn {
+                width: 100%;
+                min-width: auto;
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .admin-header {
+                padding: 15px;
+            }
+            
+            .admin-header h1 {
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }
+            
+            .nav-button {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .hamburger-btn {
+                padding: 6px 10px;
+                font-size: 1rem;
+            }
+            
+            .hamburger-content {
+                min-width: 180px;
+            }
+            
             .consultation-table {
                 font-size: 0.875rem;
             }
@@ -217,6 +373,50 @@
             .detail-content {
                 width: 95%;
                 margin: 10% auto;
+                padding: 15px;
+            }
+            
+            .close {
+                width: 36px;
+                height: 36px;
+                font-size: 20px;
+                background: #f8f8f8;
+                border: 1px solid #ddd;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-button {
+                padding: 4px 8px;
+                font-size: 0.75rem;
+            }
+            
+            .hamburger-btn {
+                padding: 5px 8px;
+                font-size: 0.9rem;
+            }
+            
+            .hamburger-content {
+                min-width: 160px;
+            }
+            
+            .hamburger-content a {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .detail-content {
+                width: 98%;
+                margin: 5% auto;
+                padding: 12px;
+            }
+            
+            .close {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+                background: #f0f0f0;
+                border: 2px solid #ccc;
             }
         }
     </style>
@@ -228,15 +428,19 @@
                 <a href="../index.html" class="nav-button">
                     <i>🏠</i>홈으로
                 </a>
-                <a href="javascript:history.back()" class="nav-button">
-                    <i>←</i>이전 페이지
-                </a>
-                <a href="adminManagement.jsp" class="nav-button" style="background: rgba(56, 161, 105, 0.8);">
-                    <i>👥</i>관리자 관리
-                </a>
-                <a href="logout.jsp" class="nav-button" style="background: rgba(229, 62, 62, 0.8);">
-                    <i>🚪</i>로그아웃
-                </a>
+                <div class="hamburger-menu">
+                    <button class="hamburger-btn" onclick="toggleHamburgerMenu()">☰</button>
+                    <div class="hamburger-content" id="hamburgerContent">
+                        <% if (isSuperAdmin) { %>
+                        <a href="adminManagement.jsp">
+                            <i>👥</i>관리자 관리
+                        </a>
+                        <% } %>
+                        <a href="logout.jsp">
+                            <i>🚪</i>로그아웃
+                        </a>
+                    </div>
+                </div>
             </div>
             <h1>상담신청 관리</h1>
             <p>자금상담신청서 목록을 관리할 수 있습니다.</p>
@@ -269,7 +473,24 @@
                             <td><%= consultation.getCompanyName() %></td>
                             <td><%= consultation.getApplicantName() %></td>
                             <td><%= consultation.getPhone() %></td>
-                            <td><%= consultation.getIndustry() %></td>
+                            <td>
+                                <%
+                                    String industry = consultation.getIndustry();
+                                    String industryKorean = "";
+                                    if (industry != null) {
+                                        switch (industry) {
+                                            case "retail": industryKorean = "도소매업"; break;
+                                            case "manufacturing": industryKorean = "제조업"; break;
+                                            case "service": industryKorean = "서비스업"; break;
+                                            case "software": industryKorean = "소프트웨어개발업"; break;
+                                            case "construction": industryKorean = "건설업"; break;
+                                            case "other": industryKorean = "기타"; break;
+                                            default: industryKorean = industry; break;
+                                        }
+                                    }
+                                %>
+                                <%= industryKorean %>
+                            </td>
                             <td>
                                 <span class="status-badge status-<%= consultation.getStatus().equals("대기중") ? "waiting" : 
                                     consultation.getStatus().equals("진행중") ? "processing" : "completed" %>">
@@ -279,12 +500,6 @@
                             <td><%= consultation.getCreatedAt() %></td>
                             <td>
                                 <button class="btn btn-primary" onclick="showDetail(<%= consultation.getId() %>)">상세보기</button>
-                                <% if (consultation.getStatus().equals("대기중")) { %>
-                                    <button class="btn btn-success" onclick="updateStatus(<%= consultation.getId() %>, '진행중')">진행</button>
-                                <% } else if (consultation.getStatus().equals("진행중")) { %>
-                                    <button class="btn btn-success" onclick="updateStatus(<%= consultation.getId() %>, '완료')">완료</button>
-                                <% } %>
-                                <button class="btn btn-danger" onclick="deleteConsultation(<%= consultation.getId() %>)">삭제</button>
                             </td>
                         </tr>
                     <% } %>
@@ -298,6 +513,13 @@
         <div class="detail-content">
             <span class="close" onclick="closeDetailModal()">&times;</span>
             <div id="detailContent"></div>
+            <!-- 액션 버튼들 -->
+            <div class="detail-actions" id="detailActions" style="display: none;">
+                <div class="action-buttons">
+                    <button class="btn btn-success" id="statusButton" onclick="updateStatusFromModal()">상태 변경</button>
+                    <button class="btn btn-danger" id="deleteButton" onclick="deleteConsultationFromModal()">삭제</button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -309,21 +531,23 @@
         %>
         {
             "id": <%= consultation.getId() %>,
-            "companyName": "<%= consultation.getCompanyName() != null ? consultation.getCompanyName().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "businessNumber": "<%= consultation.getBusinessNumber() != null ? consultation.getBusinessNumber().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "applicantName": "<%= consultation.getApplicantName() != null ? consultation.getApplicantName().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "relationship": "<%= consultation.getRelationship() != null ? consultation.getRelationship().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "relationshipOther": "<%= consultation.getRelationshipOther() != null ? consultation.getRelationshipOther().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "phone": "<%= consultation.getPhone() != null ? consultation.getPhone().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "address": "<%= consultation.getAddress() != null ? consultation.getAddress().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "detailAddress": "<%= consultation.getDetailAddress() != null ? consultation.getDetailAddress().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "ownership": "<%= consultation.getOwnership() != null ? consultation.getOwnership().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "industry": "<%= consultation.getIndustry() != null ? consultation.getIndustry().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "sales": "<%= consultation.getSales() != null ? consultation.getSales().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "loanAmount": "<%= consultation.getLoanAmount() != null ? consultation.getLoanAmount().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "fundType": "<%= consultation.getFundType() != null ? consultation.getFundType().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "message": "<%= consultation.getMessage() != null ? consultation.getMessage().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
-            "status": "<%= consultation.getStatus() != null ? consultation.getStatus().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") : "" %>",
+            "companyName": "<%= consultation.getCompanyName() != null ? consultation.getCompanyName().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "businessNumber": "<%= consultation.getBusinessNumber() != null ? consultation.getBusinessNumber().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "applicantName": "<%= consultation.getApplicantName() != null ? consultation.getApplicantName().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "relationship": "<%= consultation.getRelationship() != null ? consultation.getRelationship().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "relationshipOther": "<%= consultation.getRelationshipOther() != null ? consultation.getRelationshipOther().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "phone": "<%= consultation.getPhone() != null ? consultation.getPhone().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "address": "<%= consultation.getAddress() != null ? consultation.getAddress().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "detailAddress": "<%= consultation.getDetailAddress() != null ? consultation.getDetailAddress().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "ownership": "<%= consultation.getOwnership() != null ? consultation.getOwnership().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "industry": "<%= consultation.getIndustry() != null ? consultation.getIndustry().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "sales": "<%= consultation.getSales() != null ? consultation.getSales().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "salesUnit": "<%= consultation.getSalesUnit() != null ? consultation.getSalesUnit().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "원" %>",
+            "loanAmount": "<%= consultation.getLoanAmount() != null ? consultation.getLoanAmount().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "loanUnit": "<%= consultation.getLoanUnit() != null ? consultation.getLoanUnit().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "원" %>",
+            "fundType": "<%= consultation.getFundType() != null ? consultation.getFundType().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "message": "<%= consultation.getMessage() != null ? consultation.getMessage().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
+            "status": "<%= consultation.getStatus() != null ? consultation.getStatus().replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\\", "\\\\") : "" %>",
             "createdAt": "<%= consultation.getCreatedAt() != null ? consultation.getCreatedAt().toString() : "" %>"
         }<%= i < consultations.size() - 1 ? "," : "" %>
         <% } %>
@@ -331,112 +555,327 @@
     </script>
     
     <script>
+        let currentConsultationId = null;
+        
         function showDetail(id) {
             try {
                 // JSON 데이터에서 상담 정보 찾기
                 const dataElement = document.getElementById('consultationsData');
+                if (!dataElement) {
+                    alert('상담 데이터를 찾을 수 없습니다.');
+                    return;
+                }
+                
                 const consultations = JSON.parse(dataElement.textContent);
                 
                 console.log('All consultations:', consultations);
                 console.log('Looking for ID:', id);
                 
+                if (!consultations || consultations.length === 0) {
+                    alert('등록된 상담신청이 없습니다.');
+                    return;
+                }
+                
                 const consultation = consultations.find(c => c.id === id);
                 console.log('Found consultation:', consultation);
                 
                 if (consultation) {
+                    currentConsultationId = id;
                     displayDetail(consultation);
+                    
+                    // 액션 버튼들 표시 및 설정
+                    const detailActions = document.getElementById('detailActions');
+                    const statusButton = document.getElementById('statusButton');
+                    const deleteButton = document.getElementById('deleteButton');
+                    
+                    // 상태에 따른 버튼 텍스트 설정
+                    if (consultation.status === '대기중') {
+                        statusButton.textContent = '진행중으로 변경';
+                        statusButton.onclick = () => updateStatusFromModal('진행중');
+                        statusButton.disabled = false;
+                        statusButton.style.opacity = '1';
+                    } else if (consultation.status === '진행중') {
+                        statusButton.textContent = '완료로 변경';
+                        statusButton.onclick = () => updateStatusFromModal('완료');
+                        statusButton.disabled = false;
+                        statusButton.style.opacity = '1';
+                    } else {
+                        statusButton.textContent = '상태 변경';
+                        statusButton.disabled = true;
+                        statusButton.style.opacity = '0.5';
+                    }
+                    
+                    detailActions.style.display = 'block';
                     document.getElementById('detailModal').style.display = 'block';
                 } else {
                     alert('상세 정보를 찾을 수 없습니다. ID: ' + id);
+                    console.error('Consultation not found for ID:', id);
+                    console.log('Available IDs:', consultations.map(c => c.id));
                 }
             } catch (error) {
                 console.error('Error parsing consultation data:', error);
-                alert('데이터를 불러오는 중 오류가 발생했습니다.');
+                console.error('Raw data:', document.getElementById('consultationsData').textContent);
+                alert('데이터를 불러오는 중 오류가 발생했습니다. 콘솔을 확인해주세요.');
             }
         }
         
         function displayDetail(consultation) {
             const content = document.getElementById('detailContent');
-            content.innerHTML = `
-                <h2>상담신청 상세정보</h2>
+            
+            // 데이터 검증 및 기본값 설정
+            const safeValue = (value) => value || '-';
+            const safeText = (text) => text ? text.replace(/\n/g, '<br>') : '-';
+            
+            // 상태에 따른 CSS 클래스 결정
+            const getStatusClass = (status) => {
+                if (status === '대기중') return 'waiting';
+                if (status === '진행중') return 'processing';
+                return 'completed';
+            };
+            
+            // 업종을 한글로 변환
+            const getIndustryKorean = (industry) => {
+                const industryMap = {
+                    'retail': '도소매업',
+                    'manufacturing': '제조업',
+                    'service': '서비스업',
+                    'software': '소프트웨어개발업',
+                    'construction': '건설업',
+                    'other': '기타'
+                };
+                return industryMap[industry] || industry || '-';
+            };
+            
+            // 자금 종류를 한글로 변환
+            const getFundTypeKorean = (fundType) => {
+                if (!fundType) return '-';
                 
-                <div class="detail-section">
-                    <h3>기본 정보</h3>
-                    <div class="detail-row">
-                        <div class="detail-label">기업명:</div>
-                        <div class="detail-value">${consultation.companyName}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">사업자번호:</div>
-                        <div class="detail-value">${consultation.businessNumber}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">신청자:</div>
-                        <div class="detail-value">${consultation.applicantName}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">관계:</div>
-                        <div class="detail-value">${consultation.relationship} ${consultation.relationshipOther || ''}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">연락처:</div>
-                        <div class="detail-value">${consultation.phone}</div>
-                    </div>
-                </div>
+                const fundTypeMap = {
+                    'working': '운전자금',
+                    'facility': '시설자금',
+                    'rd': 'R&D / 연구소 설립'
+                };
                 
-                <div class="detail-section">
-                    <h3>사업장 정보</h3>
-                    <div class="detail-row">
-                        <div class="detail-label">주소:</div>
-                        <div class="detail-value">${consultation.address} ${consultation.detailAddress}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">소유:</div>
-                        <div class="detail-value">${consultation.ownership}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">업종:</div>
-                        <div class="detail-value">${consultation.industry}</div>
-                    </div>
-                </div>
+                // 여러 값이 쉼표로 구분된 경우 처리
+                if (fundType.includes(',')) {
+                    return fundType.split(',').map(type => 
+                        fundTypeMap[type.trim()] || type.trim()
+                    ).join(', ');
+                }
                 
-                <div class="detail-section">
-                    <h3>자금 정보</h3>
-                    <div class="detail-row">
-                        <div class="detail-label">전년도 매출:</div>
-                        <div class="detail-value">${consultation.sales || '-'}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">대출 요청 금액:</div>
-                        <div class="detail-value">${consultation.loanAmount || '-'}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">자금 종류:</div>
-                        <div class="detail-value">${consultation.fundType || '-'}</div>
-                    </div>
-                </div>
+                return fundTypeMap[fundType] || fundType;
+            };
+            
+            // 소유 형태를 한글로 변환
+            const getOwnershipKorean = (ownership) => {
+                if (!ownership) return '-';
                 
-                <div class="detail-section">
-                    <h3>상담 내용</h3>
-                    <div class="detail-value">${consultation.message || '상담 내용이 없습니다.'}</div>
-                </div>
+                const ownershipMap = {
+                    'self': '자가',
+                    'rent': '임차'
+                };
                 
-                <div class="detail-section">
-                    <h3>처리 정보</h3>
-                    <div class="detail-row">
-                        <div class="detail-label">상태:</div>
-                        <div class="detail-value">${consultation.status}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">신청일:</div>
-                        <div class="detail-value">${consultation.createdAt}</div>
-                    </div>
-                </div>
-            `;
+                // 여러 값이 쉼표로 구분된 경우 처리
+                if (ownership.includes(',')) {
+                    return ownership.split(',').map(type => 
+                        ownershipMap[type.trim()] || type.trim()
+                    ).join(', ');
+                }
+                
+                return ownershipMap[ownership] || ownership;
+            };
+            
+            // 관계를 한글로 변환
+            const getRelationshipKorean = (relationship) => {
+                if (!relationship) return '-';
+                
+                const relationshipMap = {
+                    'self': '본인',
+                    'other': '기타'
+                };
+                
+                return relationshipMap[relationship] || relationship;
+            };
+            
+            // 매출액을 단위와 함께 표시
+            const formatSalesAmount = (sales, salesUnit) => {
+                if (!sales || sales === '0' || sales === '') return '-';
+                
+                const amount = parseInt(sales) || 0;
+                if (amount === 0) return '-';
+                
+                const unitMap = {
+                    '원': '원',
+                    '만원': '만원',
+                    '천만원': '천만원',
+                    '억원': '억원'
+                };
+                
+                const unit = unitMap[salesUnit] || '원';
+                return amount.toLocaleString('ko-KR') + unit;
+            };
+            
+            // 대출 요청 금액을 단위와 함께 표시
+            const formatLoanAmount = (loanAmount, loanUnit) => {
+                if (!loanAmount || loanAmount === '0' || loanAmount === '') return '-';
+                
+                const amount = parseInt(loanAmount) || 0;
+                if (amount === 0) return '-';
+                
+                const unitMap = {
+                    '원': '원',
+                    '만원': '만원',
+                    '천만원': '천만원',
+                    '억원': '억원'
+                };
+                
+                const unit = unitMap[loanUnit] || '원';
+                return amount.toLocaleString('ko-KR') + unit;
+            };
+            
+            content.innerHTML = 
+                '<h2>상담신청 상세정보</h2>' +
+                '<div class="detail-section">' +
+                    '<h3>기본 정보</h3>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">기업명:</div>' +
+                        '<div class="detail-value">' + safeValue(consultation.companyName) + '</div>' +
+                    '</div>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">사업자번호:</div>' +
+                        '<div class="detail-value">' + safeValue(consultation.businessNumber) + '</div>' +
+                    '</div>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">신청자:</div>' +
+                        '<div class="detail-value">' + safeValue(consultation.applicantName) + '</div>' +
+                    '</div>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">관계:</div>' +
+                        '<div class="detail-value">' + getRelationshipKorean(consultation.relationship) + ' ' + (consultation.relationshipOther || '') + '</div>' +
+                    '</div>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">연락처:</div>' +
+                        '<div class="detail-value">' + safeValue(consultation.phone) + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="detail-section">' +
+                    '<h3>사업장 정보</h3>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">주소:</div>' +
+                        '<div class="detail-value">' + safeValue(consultation.address) + ' ' + (consultation.detailAddress || '') + '</div>' +
+                    '</div>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">소유:</div>' +
+                        '<div class="detail-value">' + getOwnershipKorean(consultation.ownership) + '</div>' +
+                    '</div>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">업종:</div>' +
+                        '<div class="detail-value">' + getIndustryKorean(consultation.industry) + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="detail-section">' +
+                    '<h3>자금 정보</h3>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">전년도 매출:</div>' +
+                        '<div class="detail-value">' + formatSalesAmount(consultation.sales, consultation.salesUnit) + '</div>' +
+                    '</div>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">대출 요청 금액:</div>' +
+                        '<div class="detail-value">' + formatLoanAmount(consultation.loanAmount, consultation.loanUnit) + '</div>' +
+                    '</div>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">자금 종류:</div>' +
+                        '<div class="detail-value">' + getFundTypeKorean(consultation.fundType) + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="detail-section">' +
+                    '<h3>상담 내용</h3>' +
+                    '<div class="detail-value" style="white-space: pre-wrap; line-height: 1.6;">' + safeText(consultation.message) + '</div>' +
+                '</div>' +
+                '<div class="detail-section">' +
+                    '<h3>처리 정보</h3>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">상태:</div>' +
+                        '<div class="detail-value">' +
+                            '<span class="status-badge status-' + getStatusClass(consultation.status) + '">' +
+                                safeValue(consultation.status) +
+                            '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="detail-row">' +
+                        '<div class="detail-label">신청일:</div>' +
+                        '<div class="detail-value">' + safeValue(consultation.createdAt) + '</div>' +
+                    '</div>' +
+                '</div>';
         }
         
         function closeDetailModal() {
             document.getElementById('detailModal').style.display = 'none';
+            currentConsultationId = null;
+        }
+        
+        function updateStatusFromModal(status) {
+            if (!currentConsultationId) {
+                alert('상담 정보를 찾을 수 없습니다.');
+                return;
+            }
+            
+            if (confirm('상태를 "' + status + '"로 변경하시겠습니까?')) {
+                // 상태 변경 요청
+                fetch('updateStatus.jsp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'id=' + currentConsultationId + '&status=' + encodeURIComponent(status)
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if (data.includes('success')) {
+                        alert('상태가 변경되었습니다.');
+                        closeDetailModal();
+                        location.reload();
+                    } else {
+                        alert('상태 변경에 실패했습니다.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('오류가 발생했습니다.');
+                });
+            }
+        }
+        
+        function deleteConsultationFromModal() {
+            if (!currentConsultationId) {
+                alert('상담 정보를 찾을 수 없습니다.');
+                return;
+            }
+            
+            if (confirm('정말로 이 상담신청을 삭제하시겠습니까?')) {
+                // 삭제 요청
+                fetch('deleteConsultation.jsp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'id=' + currentConsultationId
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if (data.includes('success')) {
+                        alert('삭제되었습니다.');
+                        closeDetailModal();
+                        location.reload();
+                    } else {
+                        alert('삭제에 실패했습니다.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('오류가 발생했습니다.');
+                });
+            }
         }
         
         function updateStatus(id, status) {
@@ -491,11 +930,24 @@
             }
         }
         
-        // 모달 외부 클릭시 닫기
+        // 햄버거 메뉴 토글
+        function toggleHamburgerMenu() {
+            const content = document.getElementById('hamburgerContent');
+            content.classList.toggle('show');
+        }
+        
+        // 햄버거 메뉴 외부 클릭시 닫기
         window.onclick = function(event) {
             const modal = document.getElementById('detailModal');
+            const hamburgerContent = document.getElementById('hamburgerContent');
+            const hamburgerBtn = document.querySelector('.hamburger-btn');
+            
             if (event.target == modal) {
                 closeDetailModal();
+            }
+            
+            if (!event.target.closest('.hamburger-menu') && hamburgerContent.classList.contains('show')) {
+                hamburgerContent.classList.remove('show');
             }
         }
         
@@ -527,6 +979,29 @@
                 btn.style.minHeight = '44px';
                 btn.style.minWidth = '44px';
             });
+            
+            // 디버깅: 상담 데이터 확인
+            const dataElement = document.getElementById('consultationsData');
+            if (dataElement) {
+                try {
+                    const consultations = JSON.parse(dataElement.textContent);
+                    console.log('=== 상담 데이터 로드 완료 ===');
+                    console.log('총 상담 건수:', consultations.length);
+                    consultations.forEach((consultation, index) => {
+                        console.log(`상담 ${index + 1}:`, {
+                            id: consultation.id,
+                            companyName: consultation.companyName,
+                            applicantName: consultation.applicantName,
+                            status: consultation.status
+                        });
+                    });
+                    console.log('============================');
+                } catch (error) {
+                    console.error('상담 데이터 파싱 오류:', error);
+                }
+            } else {
+                console.error('상담 데이터 요소를 찾을 수 없습니다.');
+            }
         });
         
         // 모바일에서 버튼 클릭 최적화
