@@ -30,7 +30,7 @@
         <nav class="navbar">
             <div class="nav-container">
                 <div class="nav-logo">
-                    <h2>Premium Consulting</h2>
+                    <h2>더문D&C그룹</h2>
                 </div>
                 <ul class="nav-menu">
                     <li class="nav-item">
@@ -172,7 +172,7 @@
                         <i class="fas fa-map-marker-alt"></i>
                         <div>
                             <h4>주소</h4>
-                            <p>서울특별시 강남구 테헤란로 123</p>
+                            <p>경기도 용인시 기흥구 강남로6, 605호(삼성타운)</p>
                         </div>
                     </div>
                     <div class="contact-item kakao-contact">
@@ -193,13 +193,13 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3>Premium Consulting</h3>
+                    <h3>더문D&C그룹 한국중소기업 경영컨설팅 연구소</h3>
                     <p>전문적인 비즈니스 솔루션을 제공하는 최고의 컨설팅 회사입니다.</p>
                 </div>
 
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 Premium Consulting. All rights reserved.</p>
+                <p>&copy; 2024 더문D&C그룹 한국중소기업 경영컨설팅 연구소. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -209,40 +209,122 @@
     <div id="corporateModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('corporateModal')">&times;</span>
-            <h2>기업 컨설팅 상담 신청</h2>
+            <h2>자금상담신청서</h2>
+            <p class="form-description">당사는 중소기업 정책자금 연구 분석을 통해 중소기업에 최적화된 솔루션을 지원하고자 설립된 종합금융서비스회사로 민간 기업입니다. 상담을 위해 당사에 제출된 자료와 상담 내용은 대외 보안을 유지합니다.</p>
             <form id="corporateForm" class="consulting-form">
                 <div class="form-group">
-                    <label for="corporateName">회사명 *</label>
+                    <label for="corporateName">기업명 *</label>
                     <input type="text" id="corporateName" name="companyName" required>
                 </div>
                 <div class="form-group">
-                    <label for="corporateContact">담당자명 *</label>
+                    <label for="corporateBusinessNumber">사업자번호(창업준비중인 경우 000-00-00000로 기재) *</label>
+                    <input type="text" id="corporateBusinessNumber" name="businessNumber" placeholder="000-00-00000" required>
+                </div>
+                <div class="form-group">
+                    <label for="corporateContact">신청자 성명 *</label>
                     <input type="text" id="corporateContact" name="contactName" required>
                 </div>
                 <div class="form-group">
-                    <label for="corporatePhone">연락처 *</label>
-                    <input type="tel" id="corporatePhone" name="phone" required>
+                    <label>사업주와의 관계 *</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="relationship" value="self" checked>
+                            <span>본인</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="relationship" value="other">
+                            <span>기타: </span>
+                            <input type="text" name="relationshipOther" placeholder="직접입력" style="width: 150px; margin-left: 5px;">
+                        </label>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label for="corporateEmail">이메일 *</label>
-                    <input type="email" id="corporateEmail" name="email" required>
+                    <label for="corporatePhone">휴대폰 *</label>
+                    <input type="tel" id="corporatePhone" name="phone" placeholder="010-0000-0000" required>
                 </div>
                 <div class="form-group">
-                    <label for="corporateService">서비스 유형 *</label>
-                    <select id="corporateService" name="serviceType" required>
-                        <option value="">선택해주세요</option>
-                        <option value="strategy">전략 수립</option>
-                        <option value="organization">조직 개편</option>
-                        <option value="process">프로세스 최적화</option>
-                        <option value="digital">디지털 전환</option>
+                    <label>사업장 주소(상세주소까지 기재/사업장이 아직 없으시면 예상지역이나 자택주소지 입력) *</label>
+                    <div class="address-group">
+                        <input type="text" name="address" placeholder="주소" required>
+                        <input type="text" name="detailAddress" placeholder="상세주소" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>사업장 소유 *</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="ownership" value="self">
+                            <span>자가</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="ownership" value="rent">
+                            <span>임차</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="corporateIndustry">업종 *</label>
+                    <select id="corporateIndustry" name="industry" required>
+                        <option value="">(선택)</option>
+                        <option value="retail">도소매업</option>
+                        <option value="manufacturing">제조업</option>
+                        <option value="service">서비스업</option>
+                        <option value="software">소프트웨어개발업</option>
+                        <option value="construction">건설업</option>
                         <option value="other">기타</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="corporateMessage">상담 내용</label>
-                    <textarea id="corporateMessage" name="message" rows="4"></textarea>
+                    <label for="corporateSales">전년도 매출액</label>
+                    <input type="text" id="corporateSales" name="sales" placeholder="예: 1억원">
                 </div>
-                <button type="submit" class="btn btn-primary">상담 신청하기</button>
+                <div class="form-group">
+                    <label for="corporateLoanAmount">대출 요청 금액</label>
+                    <input type="text" id="corporateLoanAmount" name="loanAmount" placeholder="예: 5천만원">
+                </div>
+                <div class="form-group">
+                    <label>요청 자금 종류</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="fundType" value="working">
+                            <span>운전자금</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="fundType" value="facility">
+                            <span>시설자금</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="fundType" value="rd">
+                            <span>R&D / 연구소 설립</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="corporateMessage">상담 요청시 전달 내용(없을시 빈칸)(예비창업시 대표자 경력, 업종 등 자세히 기재)</label>
+                    <textarea id="corporateMessage" name="message" rows="4" placeholder="상담하고 싶은 내용을 자세히 작성해주세요."></textarea>
+                </div>
+                <div class="form-group">
+                    <div class="privacy-agreement">
+                        <h4>개인정보 수집 및 이용 동의 *</h4>
+                        <div class="privacy-content">
+                            <p>중소벤처정책자금센터(이하 '회사'라 한다)는 개인정보 보호법 제30조에 따라 정보 주체의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수 있도록 하기 위하여 다음과 같이 개인정보 처리지침을 수립, 공개합니다.</p>
+                            <p><strong>제1조 (개인정보의 처리목적)</strong><br>
+                            회사는 다음의 목적을 위하여 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 개인정보 보호법 제18조에 따라 별도의 동의를 받는 등 필요한 조치를 이행할 예정입니다.</p>
+                            <p>1. 자금상담신청서 접수 및 상담 서비스 제공<br>
+                            2. 상담 내용 분석 및 맞춤형 솔루션 제안<br>
+                            3. 정책자금 관련 정보 제공</p>
+                            <p><strong>제2조 (개인정보의 처리 및 보유기간)</strong><br>
+                            회사는 법령에 따른 개인정보 보유·이용기간 또는 정보주체로부터 개인정보를 수집시에 동의받은 개인정보 보유·이용기간 내에서 개인정보를 처리·보유합니다.</p>
+                            <p>1. 자금상담신청서: 상담 완료 후 3년<br>
+                            2. 상담 기록: 상담 완료 후 5년</p>
+                        </div>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="privacyAgreement" required>
+                            <span>개인정보 수집 및 이용에 동의합니다.</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">확인</button>
             </form>
         </div>
     </div>
@@ -336,6 +418,13 @@
                 <button type="submit" class="btn btn-primary">지원하기</button>
             </form>
         </div>
+    </div>
+
+    <!-- 플로팅 관리자 버튼 -->
+    <div class="admin-float-btn">
+        <a href="admin/consultationList.jsp" title="관리자 페이지">
+            <i class="fas fa-cog"></i>
+        </a>
     </div>
 
     <script src="js/script.js"></script>

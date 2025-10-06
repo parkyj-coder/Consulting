@@ -503,15 +503,16 @@ function setupFormHandlers() {
 // 폼 제출 처리
 function handleFormSubmission(form, formType) {
     const formData = new FormData(form);
-    const data = {};
     
-    // FormData를 객체로 변환
+    // 디버깅: 폼 데이터 확인
+    console.log("=== 폼 데이터 디버깅 ===");
     for (let [key, value] of formData.entries()) {
-        data[key] = value;
+        console.log(key + ": " + value);
     }
-
-    // 간단한 유효성 검사
-    if (!validateForm(data, formType)) {
+    console.log("========================");
+    
+    // 유효성 검사
+    if (!validateForm(formData, formType)) {
         return;
     }
 
@@ -521,26 +522,51 @@ function handleFormSubmission(form, formType) {
     submitButton.textContent = '처리 중...';
     submitButton.disabled = true;
 
-    // 실제 환경에서는 서버로 데이터 전송
-    // 여기서는 시뮬레이션
-    setTimeout(() => {
-        showSuccessMessage(formType);
-        form.reset();
+    // FormData를 URLSearchParams로 변환
+    const urlSearchParams = new URLSearchParams();
+    for (let [key, value] of formData.entries()) {
+        urlSearchParams.append(key, value);
+    }
+    
+    console.log("전송할 데이터:", urlSearchParams.toString());
+    
+    // 서버로 데이터 전송
+    fetch('consultationProcess.jsp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: urlSearchParams.toString()
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccessMessage(formType, data.message);
+            form.reset();
+            
+            // 모달 닫기
+            const modal = form.closest('.modal');
+            if (modal) {
+                closeModal(modal.id);
+            }
+        } else {
+            showErrorMessage(data.message || '상담신청 처리 중 오류가 발생했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorMessage('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+    })
+    .finally(() => {
         submitButton.textContent = originalText;
         submitButton.disabled = false;
-        
-        // 모달 닫기
-        const modal = form.closest('.modal');
-        if (modal) {
-            closeModal(modal.id);
-        }
-    }, 2000);
+    });
 }
 
 // 폼 유효성 검사
-function validateForm(data, formType) {
+function validateForm(formData, formType) {
     const requiredFields = {
-        '기업 컨설팅': ['companyName', 'contactName', 'phone', 'email', 'serviceType'],
+        '기업 컨설팅': ['companyName', 'businessNumber', 'contactName', 'phone', 'address', 'detailAddress', 'industry', 'privacyAgreement'],
         '개인 컨설팅': ['name', 'phone', 'email', 'serviceType'],
         '입사 지원': ['name', 'phone', 'email', 'position']
     };
@@ -548,31 +574,54 @@ function validateForm(data, formType) {
     const fields = requiredFields[formType];
     
     for (let field of fields) {
-        if (!data[field] || data[field].trim() === '') {
-            showErrorMessage(`${getFieldLabel(field)}을(를) 입력해주세요.`);
-            return false;
+        const value = formData.get(field);
+        // 체크박스의 경우 특별 처리
+        if (field === 'privacyAgreement') {
+            if (!value) {
+                showErrorMessage('개인정보 수집 및 이용에 동의해주세요.');
+                return false;
+            }
+        } else {
+            if (!value || value.trim() === '') {
+                showErrorMessage(`${getFieldLabel(field)}을(를) 입력해주세요.`);
+                return false;
+            }
         }
     }
 
-    // 이메일 형식 검사
-    if (data.email && !isValidEmail(data.email)) {
-        showErrorMessage('올바른 이메일 형식을 입력해주세요.');
+    // 전화번호 형식 검사
+    const phone = formData.get('phone');
+    if (phone && !isValidPhone(phone)) {
+        showErrorMessage('올바른 전화번호 형식을 입력해주세요.');
         return false;
     }
-
-    // 전화번호 형식 검사
-    if (data.phone && !isValidPhone(data.phone)) {
-        showErrorMessage('올바른 전화번호 형식을 입력해주세요.');
+    
+    // 사업자번호 형식 검사
+    const businessNumber = formData.get('businessNumber');
+    if (businessNumber && !isValidBusinessNumber(businessNumber)) {
+        showErrorMessage('올바른 사업자번호 형식을 입력해주세요. (예: 123-45-67890)');
         return false;
     }
 
     return true;
 }
 
+// 사업자번호 형식 검사
+function isValidBusinessNumber(businessNumber) {
+    const pattern = /^\d{3}-\d{2}-\d{5}$/;
+    return pattern.test(businessNumber);
+}
+
 // 필드 라벨 가져오기
 function getFieldLabel(fieldName) {
     const labels = {
-        'companyName': '회사명',
+        'companyName': '기업명',
+        'businessNumber': '사업자번호',
+        'contactName': '신청자 성명',
+        'address': '주소',
+        'detailAddress': '상세주소',
+        'industry': '업종',
+        'privacyAgreement': '개인정보 동의',
         'contactName': '담당자명',
         'name': '이름',
         'phone': '연락처',
@@ -596,14 +645,15 @@ function isValidPhone(phone) {
 }
 
 // 성공 메시지 표시
-function showSuccessMessage(formType) {
+function showSuccessMessage(formType, customMessage = null) {
     const messages = {
-        '기업 컨설팅': '기업 컨설팅 상담 신청이 완료되었습니다. 빠른 시일 내에 연락드리겠습니다.',
+        '기업 컨설팅': '자금상담신청이 완료되었습니다. 빠른 시일 내에 연락드리겠습니다.',
         '개인 컨설팅': '개인 컨설팅 상담 신청이 완료되었습니다. 빠른 시일 내에 연락드리겠습니다.',
         '입사 지원': '입사 지원이 완료되었습니다. 검토 후 연락드리겠습니다.'
     };
 
-    showNotification(messages[formType], 'success');
+    const message = customMessage || messages[formType];
+    showNotification(message, 'success');
 }
 
 // 에러 메시지 표시
@@ -805,3 +855,281 @@ if (resumeInput) {
         }
     });
 }
+
+// ===== 반응형 디자인 JavaScript 기능 =====
+
+// 모바일 네비게이션 토글
+function toggleMobileMenu() {
+    const navMenu = document.querySelector('.nav-menu');
+    const hamburger = document.querySelector('.hamburger');
+    
+    if (navMenu && hamburger) {
+        navMenu.classList.toggle('active');
+        hamburger.classList.toggle('active');
+        
+        // body 스크롤 방지/허용
+        if (navMenu.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+}
+
+// 화면 크기 변경 감지 및 처리
+function handleResize() {
+    const navMenu = document.querySelector('.nav-menu');
+    const hamburger = document.querySelector('.hamburger');
+    
+    if (window.innerWidth > 768) {
+        // 데스크톱에서는 모바일 메뉴 닫기
+        if (navMenu && hamburger) {
+            navMenu.classList.remove('active');
+            hamburger.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+}
+
+// 터치 이벤트 처리 (모바일 최적화)
+function handleTouchEvents() {
+    const navMenu = document.querySelector('.nav-menu');
+    
+    if (navMenu) {
+        // 터치 스와이프로 메뉴 닫기
+        let startX = 0;
+        let startY = 0;
+        
+        navMenu.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
+        
+        navMenu.addEventListener('touchmove', function(e) {
+            if (!startX || !startY) return;
+            
+            const diffX = startX - e.touches[0].clientX;
+            const diffY = startY - e.touches[0].clientY;
+            
+            // 오른쪽으로 스와이프하면 메뉴 닫기
+            if (Math.abs(diffX) > Math.abs(diffY) && diffX < -50) {
+                toggleMobileMenu();
+            }
+        });
+    }
+}
+
+// 모바일에서 메뉴 링크 클릭 시 자동 닫기
+function setupMobileMenuLinks() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                toggleMobileMenu();
+            }
+        });
+    });
+}
+
+// 모바일에서 모달 외부 클릭 시 닫기
+function setupMobileModalClose() {
+    const modals = document.querySelectorAll('.modal');
+    
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
+}
+
+// 터치 친화적 스크롤 처리
+function setupTouchScroll() {
+    // iOS에서 부드러운 스크롤
+    if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+        document.body.style.webkitOverflowScrolling = 'touch';
+    }
+    
+    // 모바일에서 스크롤 성능 최적화
+    let ticking = false;
+    
+    function updateScroll() {
+        // 스크롤 이벤트 처리
+        ticking = false;
+    }
+    
+    function requestTick() {
+        if (!ticking) {
+            requestAnimationFrame(updateScroll);
+            ticking = true;
+        }
+    }
+    
+    window.addEventListener('scroll', requestTick, { passive: true });
+}
+
+// 모바일 키보드 처리
+function handleMobileKeyboard() {
+    const inputs = document.querySelectorAll('input, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            // iOS에서 키보드가 올라올 때 뷰포트 조정
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        });
+    });
+}
+
+// 디바이스 방향 변경 처리
+function handleOrientationChange() {
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            // 방향 변경 후 레이아웃 재조정
+            handleResize();
+        }, 100);
+    });
+}
+
+// 네트워크 상태 감지
+function handleNetworkStatus() {
+    function updateOnlineStatus() {
+        if (navigator.onLine) {
+            console.log('온라인 상태');
+        } else {
+            showErrorMessage('인터넷 연결이 끊어졌습니다. 연결을 확인해주세요.');
+        }
+    }
+    
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+}
+
+// 성능 최적화: 지연 로딩
+function setupLazyLoading() {
+    const images = document.querySelectorAll('img[data-src]');
+    
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove('lazy');
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    }
+}
+
+// 접근성 개선
+function setupAccessibility() {
+    // 키보드 네비게이션
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            // ESC 키로 모달 닫기
+            const openModal = document.querySelector('.modal[style*="block"]');
+            if (openModal) {
+                closeModal(openModal.id);
+            }
+            
+            // ESC 키로 모바일 메뉴 닫기
+            const navMenu = document.querySelector('.nav-menu.active');
+            if (navMenu) {
+                toggleMobileMenu();
+            }
+        }
+    });
+    
+    // 포커스 관리
+    const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    
+    function trapFocus(element) {
+        const focusableContent = element.querySelectorAll(focusableElements);
+        const firstFocusableElement = focusableContent[0];
+        const lastFocusableElement = focusableContent[focusableContent.length - 1];
+        
+        element.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === firstFocusableElement) {
+                        lastFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastFocusableElement) {
+                        firstFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+    }
+    
+    // 모달에 포커스 트랩 적용
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => trapFocus(modal));
+}
+
+// 초기화 함수
+function initResponsiveFeatures() {
+    // 이벤트 리스너 등록
+    window.addEventListener('resize', handleResize);
+    
+    // 햄버거 메뉴 클릭 이벤트
+    const hamburger = document.querySelector('.hamburger');
+    if (hamburger) {
+        hamburger.addEventListener('click', toggleMobileMenu);
+    }
+    
+    // 터치 이벤트 설정
+    handleTouchEvents();
+    
+    // 모바일 메뉴 링크 설정
+    setupMobileMenuLinks();
+    
+    // 모바일 모달 설정
+    setupMobileModalClose();
+    
+    // 터치 스크롤 설정
+    setupTouchScroll();
+    
+    // 모바일 키보드 처리
+    handleMobileKeyboard();
+    
+    // 방향 변경 처리
+    handleOrientationChange();
+    
+    // 네트워크 상태 처리
+    handleNetworkStatus();
+    
+    // 지연 로딩 설정
+    setupLazyLoading();
+    
+    // 접근성 설정
+    setupAccessibility();
+    
+    console.log('반응형 기능이 초기화되었습니다.');
+}
+
+// DOM 로드 완료 후 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    initResponsiveFeatures();
+});
+
+// 페이지 로드 완료 후 추가 초기화
+window.addEventListener('load', function() {
+    // 성능 모니터링
+    if ('performance' in window) {
+        const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+        console.log(`페이지 로드 시간: ${loadTime}ms`);
+    }
+});
