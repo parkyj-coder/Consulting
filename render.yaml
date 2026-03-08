@@ -1,0 +1,25 @@
+# Render 배포 설정 (Blueprint)
+# https://dashboard.render.com 에서 GitHub 연동 후 이 저장소 선택 시 자동 적용됩니다.
+# MySQL 데이터베이스는 Render 대시보드에서 별도 생성 후 연결하세요.
+
+services:
+  - type: web
+    name: consulting
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: JAVA_OPTS
+        value: "-Dfile.encoding=UTF-8 -Xmx512m"
+    # 데이터베이스는 Render MySQL 생성 후 다음처럼 환경변수로 설정하세요:
+    # - key: DB_DRIVER
+    #   sync: false
+    # - key: DB_URL
+    #   fromDatabase:
+    #     name: your-mysql-service
+    #     property: connectionString
+    # - key: DB_USERNAME
+    #   sync: false
+    # - key: DB_PASSWORD
+    #   fromDatabase:
+    #     name: your-mysql-service
+    #     property: password

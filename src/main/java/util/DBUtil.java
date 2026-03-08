@@ -30,18 +30,27 @@ public class DBUtil {
     
     /**
      * 데이터베이스 연결을 반환합니다.
+     * 환경변수(DB_DRIVER, DB_URL, DB_USERNAME, DB_PASSWORD)가 있으면 우선 사용하고,
+     * 없으면 db.properties 를 사용합니다.
      * @return Connection 객체
      * @throws SQLException 데이터베이스 연결 오류 시
      */
     public static Connection getConnection() throws SQLException {
         try {
-            String driver = properties.getProperty("db.driver");
-            String url = properties.getProperty("db.url");
-            String username = properties.getProperty("db.username");
-            String password = properties.getProperty("db.password");
+            String driver = System.getenv("DB_DRIVER");
+            String url = System.getenv("DB_URL");
+            String username = System.getenv("DB_USERNAME");
+            String password = System.getenv("DB_PASSWORD");
+
+            if (driver == null || url == null || username == null || password == null) {
+                driver = properties.getProperty("db.driver");
+                url = properties.getProperty("db.url");
+                username = properties.getProperty("db.username");
+                password = properties.getProperty("db.password");
+            }
             
             if (driver == null || url == null || username == null || password == null) {
-                throw new SQLException("데이터베이스 설정 정보가 불완전합니다.");
+                throw new SQLException("데이터베이스 설정 정보가 불완전합니다. 환경변수 또는 db.properties를 확인하세요.");
             }
             
             // 드라이버 로드

@@ -1,0 +1,8 @@
+# 데이터베이스 연결 설정 예시
+# 이 파일을 db.properties 로 복사한 뒤 값을 채우세요.
+# db.properties 는 .gitignore 에 포함되어 커밋되지 않습니다.
+
+db.driver=com.mysql.cj.jdbc.Driver
+db.url=jdbc:mysql://HOST:3306/DATABASE?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+db.username=your_username
+db.password=your_password
