@@ -1,0 +1,51 @@
+# GitHub 푸시 시 카페24 Tomcat JSP 호스팅으로 FTP 자동 배포
+# 사용 전 GitHub 저장소 Settings → Secrets and variables → Actions 에서 시크릿 4개 등록 필요
+
+name: Deploy to Cafe24 (FTP)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # 수동 실행도 가능
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build WAR
+        run: mvn -B package -DskipTests
+        env:
+          # 빌드 시 DB/카카오 설정 없어도 컴파일만 하면 됨 (실행은 카페24에서)
+          MAVEN_OPTS: -Dmaven.repo.local=$HOME/.m2/repository
+
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Upload WAR to Cafe24 (FTP)
+        env:
+          FTP_HOST: ${{ secrets.CAFE24_FTP_HOST }}
+          FTP_USER: ${{ secrets.CAFE24_FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.CAFE24_FTP_PASSWORD }}
+          FTP_DIR: ${{ secrets.CAFE24_FTP_SERVER_DIR }}
+        run: |
+          lftp -c "
+            set ftp:ssl-allow no
+            set net:timeout 10
+            set net:max-retries 3
+            set ftp:passive-mode on
+            open -u ${FTP_USER},${FTP_PASS} ${FTP_HOST}
+            cd ${FTP_DIR}
+            put target/Consulting.war -o ROOT.war
+            bye
+          "
+        # 배포 확인 후 서버에서 ROOT.war 수동 삭제 권장 (재시작 시 재배포 방지)

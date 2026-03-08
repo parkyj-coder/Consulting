@@ -632,8 +632,19 @@ body {
     color: #3C1E1E !important;
 }
 
-.kakao-contact p {
-    color: #3C1E1E !important;
+.kakao-contact > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.kakao-contact .kakao-link {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    width: fit-content;
+    min-width: 0;
 }
 
 .kakao-link {
@@ -645,7 +656,6 @@ body {
     text-decoration: none;
     font-weight: 600;
     font-size: 0.8rem;
-    margin-top: 8px;
     transition: all 0.3s ease;
 }
 
